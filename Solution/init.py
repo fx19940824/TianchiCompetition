@@ -79,10 +79,31 @@ if __name__=='__main__':
     tensorboard=TensorBoard(log_dir=log_path,write_images=1,histogram_freq=0)
     callbacks_list=[checkpoint,history,tensorboard]
 
+    validation_generator=datamanager.validation_Generator(inputshape,batch_size)
 
-    model.fit_generator(train_generator,steps_per_epoch=steps_per_epoch_train,epochs=epochs,callbacks=callbacks_list,verbose=1)
-
+    model.fit_generator(
+        train_generator,
+        steps_per_epoch=steps_per_epoch_train,
+        epochs=epochs,
+        callbacks=callbacks_list,
+        verbose=1,
+        validation_data=validation_generator,
+        validation_step=500
+    )
     history.loss_plot('epoch')
+
+    result=[]
+
+    for i in range(len(x_test)):
+        test_data=datamanager.read_image(x_test[i])
+        test_data=clip(test_data)
+        result.append(0)
+        for test_batch in test_data:
+            if datamanager.isDetected(model.predict(test_batch)):
+                result[i]=1
+                break
+    
+    print([result,y_test])
 
     '''train_history=defaultdict(list)
     test_history=defaultdict(list)
