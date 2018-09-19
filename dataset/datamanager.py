@@ -1,4 +1,5 @@
 import os
+import glob
 import csv
 import numpy as np
 from PIL import Image
@@ -9,8 +10,8 @@ from keras.utils import normalize,to_categorical
 
 def get_traindir():
     data_dir=os.path.split(os.path.realpath(__file__))[0]
-    train2_path=os.path.join(data_dir,'guangdong_round1_train2_20180916/')
-    return train2_path
+    train_path=os.path.join(data_dir,'guangdong_round1_train2_20180916/')
+    return train_path
 
 def get_testdir():
     data_dir=os.path.split(os.path.realpath(__file__))[0]
@@ -70,6 +71,9 @@ def str2label_simple(label_name):
         '脏点':11
     }.get(label_name)
 
+def getfileinDir(data_dir,suffix='/*.jpg'):
+    return glob.glob(data_dir+suffix)
+
 def load_data_simple():
     data_dir=os.path.split(os.path.realpath(__file__))[0]
     
@@ -98,8 +102,7 @@ def load_data_simple():
 def load_data():
     data_dir=os.path.split(os.path.realpath(__file__))[0]
     
-    #train1_path=os.path.join(data_dir,'guangdong_round1_train1_20180903.zip')
-    train2_path=os.path.join(data_dir,'guangdong_round1_train2_20180916/')
+    train_path=os.path.join(data_dir,'guangdong_round1_train2_20180916/')
     test_path=os.path.join(data_dir,'guangdong_round1_test_a_20180916/')
     label_path=os.path.join(data_dir,'guangdong_round1_submit_sample_20180916.csv')
 
@@ -108,25 +111,24 @@ def load_data():
     x_test=[]
     y_test=[]
 
-    train_positive_dir=os.path.join(train2_path,'无瑕疵样本/')
-    train_negative_dir=os.path.join(train2_path,'瑕疵样本/')
+    train_positive_dir=os.path.join(train_path,'无瑕疵样本/')
+    train_negative_dir=os.path.join(train_path,'瑕疵样本/')
     
-    for image_path in os.listdir(train_positive_dir):
-        x_train.append(os.path.join(train_positive_dir,image_path))
-        #x_train.append(read_image(input_path=os.path.join(train_positive_dir,image_path),
-        #                        scale=0.1))
-        #y_train.append('正常')
-        y_train.append(0)
+    for input_dir in os.listdir(train_positive_dir):
+        pathlist=getfileinDir(os.path.join(train_positive_dir,input_dir))
+        labellist=[str2label_simple(input_dir) for i in range(len(pathlist))]
+        x_train.extend(pathlist)
+        y_train.extend(labellist)
+
     for input_dir in os.listdir(train_negative_dir):
-        folder=os.path.join(train_negative_dir,input_dir)
-        for image_path in os.listdir(folder):
-            x_train.append(os.path.join(folder,image_path))
-            #x_train.append(read_image(input_path=os.path.join(folder,image_path),
-            #                        scale=0.1))
-            y_train.append(str2label_simple(input_dir))
+        pathlist=getfileinDir(os.path.join(train_negative_dir,input_dir))
+        labellist=[str2label_simple(input_dir) for i in range(len(pathlist))]
+        x_train.extend(pathlist)
+        y_train.extend(labellist)
     
-    for image_path in os.listdir(test_path):
-        x_test.append(os.path.join(test_path,image_path))
+    x_test=getfileinDir(test_path)
+    #for image_path in os.listdir(test_path):
+        #x_test.append(os.path.join(test_path,image_path))
         #x_test.append(read_image(input_path=os.path.join(test_path,image_path)))
 
     with open(label_path,newline='') as csvfile:
