@@ -1,4 +1,4 @@
-from TianchiCompetition.dataset import datamanager
+from TianchiCompetition.dataset import datamanager,clip_data
 from TianchiCompetition.Solution.model import modelmanager
 import keras
 import tensorflow as tf
@@ -95,8 +95,7 @@ if __name__=='__main__':
     result=[]
 
     for i in range(len(x_test)):
-        test_data=datamanager.read_image(x_test[i])
-        test_data=clip(test_data)
+        test_data=clip_data.clip_img(x_test[i])
         result.append(0)
         for test_batch in test_data:
             if datamanager.isDetected(model.predict(test_batch)):

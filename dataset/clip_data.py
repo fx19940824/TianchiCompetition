@@ -14,17 +14,15 @@ from dataset import datamanager
 def clip_img(path_img):
     img = cv2.imdecode(np.fromfile(path_img,dtype=np.uint8),-1)
     size_img = img.shape
-    rows = height = int(size_img[0])
-    cols = width = int(size_img[1])
+    rows = int(size_img[0])
+    cols = int(size_img[1])
     img_clip = []
     n_rows = int(rows//clip_size + 1)
     n_cols = int(cols//clip_size + 1)
-    index = 0
     for r in range(0, n_rows-1):
         up = r*clip_size
         down = [up + clip_size, rows][r == n_rows - 1]    
         for c in range(0, n_cols-1):
-            index = int(n_rows*r+c)
             left = c*clip_size
             right = [left + clip_size, cols][c == n_cols - 1]
             clip = img[up:down, left:right]
@@ -37,16 +35,15 @@ def clip_imgs(path_positive, clip_savepath_positive):
     path_images = glob.glob(path_positive+'*.jpg')
     index_img = int(0)
     p = pb.ProgressBar()
-    p.start(1000)
+    p.start(len(path_images))
     for path_img in path_images:
         index_img = index_img+1
         p.update(index_img)
         #channel order: rgb
         img = cv2.imdecode(np.fromfile(path_img,dtype=np.uint8),-1)
         size_img = img.shape
-        rows = height = int(size_img[0])
-        cols = width = int(size_img[1])
-        channel = int(size_img[2])
+        rows = int(size_img[0])
+        cols = int(size_img[1])
         
         n_rows = int(rows//clip_size + 1)
         n_cols = int(cols//clip_size + 1)
@@ -102,17 +99,16 @@ def clip_positive_imgs():
 def clip_negatiave_imgs():
     #negative folder list
     folderlist_negative = os.listdir(path_negative)
-    
     if not os.path.exists(clip_savepath_negative):
         os.makedirs(clip_savepath_negative)
     
     for folder_negative in folderlist_negative:
-        label_name = datamanager.str2label(folderlist_negative.index(folder_negative)+1)
+        label_name = datamanager.str2label_simple(folder_negative)
         save_folder = clip_savepath_negative+'/'+str(label_name)+'/'
         print(save_folder)
-#        if not os.path.exists(save_folder):
-#            os.makedirs(save_folder)
-#        clip_imgs(path_negative+'/'+folder_negative+'/', save_folder)
+        if not os.path.exists(save_folder):
+            os.makedirs(save_folder)
+        clip_imgs(path_negative+'/'+folder_negative+'/', save_folder)
     
 if(__name__=='__main__'):
     clip_size = 512;
@@ -121,6 +117,6 @@ if(__name__=='__main__'):
     clip_savepath_positive = 'guangdong_round1_train2_20180916_clip/positive/'
     clip_savepath_negative = 'guangdong_round1_train2_20180916_clip/negative/'
     
-#   gen_img('test_data/toclip.jpg', 'test_data/')
-    clip_negatiave_imgs()
- 
+#    clip_positive_imgs()
+#    clip_negatiave_imgs()
+    print('finished')
