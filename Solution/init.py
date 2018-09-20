@@ -51,8 +51,9 @@ def get_image(image_path,image_W,image_H,batch_size,epochs,shuffle=False):
 
 if __name__=='__main__':
     #parameter
+    image_size=512
     batch_size=32
-    inputshape=(192,256,3)
+    inputshape=(512,512,3)
     epochs=50
     num_classes=12
     dirpath=os.path.split(os.path.realpath(__file__))[0]
@@ -88,7 +89,7 @@ if __name__=='__main__':
         callbacks=callbacks_list,
         verbose=1,
         validation_data=validation_generator,
-        validation_step=500
+        validation_steps=500
     )
     history.loss_plot('epoch')
 

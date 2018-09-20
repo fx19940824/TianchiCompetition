@@ -71,6 +71,8 @@ def str2label_simple(label_name):
         '脏点':11
     }.get(label_name)
 
+
+
 def isDetected(label_num):
     if label_num < 2:
         return 0
@@ -82,24 +84,28 @@ def getfileinDir(data_dir,suffix='/*.jpg'):
 
 def load_traindata(read=False):
     data_dir=os.path.split(os.path.realpath(__file__))[0]
-    train_path=os.path.join(data_dir,'guangdong_round1_train2_20180916/')
-    label_path=os.path.join(data_dir,'guangdong_round1_submit_sample_20180916.csv')
-
+    train_path=os.path.join(data_dir,'traindata/')
+    
     x_train=[]
     y_train=[]
 
-    train_positive_dir=os.path.join(train_path,'无瑕疵样本/')
-    train_negative_dir=os.path.join(train_path,'瑕疵样本/')
+    #train_positive_dir=os.path.join(train_path,'无瑕疵样本/')
+    #train_negative_dir=os.path.join(train_path,'瑕疵样本/')
     
+    train_positive_dir=os.path.join(train_path,'positive/')
+    train_negative_dir=os.path.join(train_path,'negative/')
+
     for input_dir in os.listdir(train_positive_dir):
         pathlist=getfileinDir(os.path.join(train_positive_dir,input_dir))
-        labellist=[str2label_simple(input_dir) for i in range(len(pathlist))]
+        labellist=[int(input_dir) for i in range(len(pathlist))]
+        #labellist=[str2label_simple(input_dir) for i in range(len(pathlist))]
         x_train.extend(pathlist)
         y_train.extend(labellist)
 
     for input_dir in os.listdir(train_negative_dir):
         pathlist=getfileinDir(os.path.join(train_negative_dir,input_dir))
-        labellist=[str2label_simple(input_dir) for i in range(len(pathlist))]
+        labellist=[int(input_dir) for i in range(len(pathlist))]
+        #labellist=[str2label_simple(input_dir) for i in range(len(pathlist))]
         x_train.extend(pathlist)
         y_train.extend(labellist)
     
@@ -115,6 +121,7 @@ def load_traindata(read=False):
 def load_testdata(read=False):
     data_dir=os.path.split(os.path.realpath(__file__))[0]
     test_path=os.path.join(data_dir,'guangdong_round1_test_a_20180916/')
+    label_path=os.path.join(data_dir,'guangdong_round1_submit_sample_20180916.csv')
 
     x_test=[]
     y_test=[]
@@ -174,7 +181,7 @@ def train_Generator(input_shape,batch_size):
         yield np.array(X),np.array(Y)    
 
 def validation_Generator(input_shape,batch_size):
-    x_train,y_train=load_traindata()
+    x_train,y_train=load_traindata(read=True)
 
     validation_gen=ImageDataGenerator(
         featurewise_center=0,
