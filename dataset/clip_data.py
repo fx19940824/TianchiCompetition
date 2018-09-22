@@ -5,13 +5,12 @@ import os
 import glob
 import PIL.Image as Image
 import numpy as np
-import progressbar as pb
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
-#from TianchiCompetition.dataset import datamanager
-from dataset import datamanager
+from TianchiCompetition.dataset import datamanager
 
 
-def clip_img(path_img):
+
+def clip_img(path_img,clip_size):
     img = cv2.imdecode(np.fromfile(path_img,dtype=np.uint8),-1)
     size_img = img.shape
     rows = int(size_img[0])
@@ -34,11 +33,8 @@ def clip_img(path_img):
 def clip_imgs(path_positive, clip_savepath_positive):
     path_images = glob.glob(path_positive+'*.jpg')
     index_img = int(0)
-    p = pb.ProgressBar()
-    p.start(len(path_images))
     for path_img in path_images:
         index_img = index_img+1
-        p.update(index_img)
         #channel order: rgb
         img = cv2.imdecode(np.fromfile(path_img,dtype=np.uint8),-1)
         size_img = img.shape
@@ -60,8 +56,6 @@ def clip_imgs(path_positive, clip_savepath_positive):
                     continue
                 clip_filename = str(index_img) + '_' + str(index) + ".jpg"
                 cv2.imwrite(clip_savepath_positive+clip_filename, clip)
-    p.finish()
-
 
 def gen_img(path_img, folder_save):
     datagen = ImageDataGenerator(
@@ -111,7 +105,7 @@ def clip_negatiave_imgs():
         clip_imgs(path_negative+'/'+folder_negative+'/', save_folder)
     
 if(__name__=='__main__'):
-    clip_size = 512;
+    clip_size = 512
     path_positive = 'guangdong_round1_train2_20180916/无瑕疵样本/'
     path_negative = 'guangdong_round1_train2_20180916/瑕疵样本/'
     clip_savepath_positive = 'guangdong_round1_train2_20180916_clip/positive/'

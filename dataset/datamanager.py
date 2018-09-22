@@ -57,24 +57,42 @@ def str2label_complex(label_name):
 
 def str2label_simple(label_name):
     return {
-        '正常':0,
-        '不导电':1,
-        '擦花':2,
-        '横条压凹':3,
-        '桔皮':4,
-        '漏底':5,
-        '碰伤':6,
-        '其他':7,
-        '起坑':8,
-        '凸粉':9,
-        '涂层开裂':10,
-        '脏点':11
+        '正常1':0,
+        '正常2':1,
+        '正常3':2,
+        '不导电':3,
+        '擦花':4,
+        '横条压凹':5,
+        '桔皮':6,
+        '漏底':7,
+        '碰伤':8,
+        '起坑':9,
+        '凸粉':10,
+        '涂层开裂':11,
+        '脏点':12,
+        '其他':13
     }.get(label_name)
 
-
+def label2result(label_num):
+    return {
+        0:'norm',
+        1:'norm',
+        2:'norm',
+        3:'defect1',
+        4:'defect2',
+        6:'defect4',
+        7:'defect5',
+        5:'defect3',
+        8:'defect6',
+        9:'defect7',
+        10:'defect8',
+        11:'defect9',
+        12:'defect10',
+        13:'defect11'
+    }.get(label_num)
 
 def isDetected(label_num):
-    if label_num < 2:
+    if label_num < 3:
         return 0
     return 1
     
@@ -115,7 +133,7 @@ def load_traindata(read=False):
             x_data.append(read_image(path))
         x_train=x_data
 
-    return x_train,y_train
+    return np.array(x_train),np.array(y_train)
 
 
 def load_testdata(read=False):
@@ -151,8 +169,27 @@ def load_data():
             
     return (x_train,y_train),(x_test,y_test)   
 
-def train_Generator(input_shape,batch_size):
-    x_train,y_train=load_traindata(read=True)
+def write_result(label,filename=None):
+    data_dir=os.path.split(os.path.realpath(__file__))[0]
+    label_path=os.path.join(data_dir,'result.csv')
+
+    result=[]
+    for i in range(len(label)):
+        rowcontent=[]
+        if filename==None:
+            rowcontent.append(str(i)+'.jpg')
+        else:
+            rowcontent.append(filename[i])
+        rowcontent.append(label2result(label[i]))
+        result.append(rowcontent)
+
+    with open(label_path,'w',newline='') as f:
+        writer=csv.writer(f)
+        writer.writerows(result)
+
+
+def train_Generator(input_shape,num_classes,batch_size):
+    '''x_train,y_train=load_traindata(read=True)
 
     train_gen=ImageDataGenerator(
         featurewise_center=0,
@@ -160,12 +197,15 @@ def train_Generator(input_shape,batch_size):
         rescale=1./255,   
         horizontal_flip=True
     )
-    return train_gen.flow(x_train,y_train,batch_size=batch_size)
+    return train_gen.flow(x_train,y_train,batch_size=batch_size)'''
 
-    index=np.arange(len(x_train))
+    
+    x_train,y_train=load_traindata()
+
+    index=np.arange(x_train.shape[0])
     np.random.shuffle(index)
     x_train,y_train=x_train[index],y_train[index]
-    y_train=to_categorical(y_train)
+    y_train=to_categorical(y_train,num_classes)
     zipped=itertools.cycle(itertools.zip_longest(x_train,y_train))
 
     while True:
@@ -173,15 +213,15 @@ def train_Generator(input_shape,batch_size):
         Y=[]
         for _ in range(batch_size):
             x_path,y=zipped.__next__()
-            img_train=img_to_array(load_img(x_path)).astype('float32')
-            img_train=ndimage.zoom(img_train,(0.1,0.1,1))
+            img_train=img_to_array(load_img(x_path,target_size=(input_shape[0],input_shape[1]))).astype('float32')
+            #img_train=ndimage.zoom(img_train,(0.5,0.5,1))
             X.append(normalize(img_train))
             Y.append(y)
 
-        yield np.array(X),np.array(Y)    
+        yield np.array(X),np.array(Y)  
 
-def validation_Generator(input_shape,batch_size):
-    x_train,y_train=load_traindata(read=True)
+def validation_Generator(input_shape,num_classes,batch_size):
+    '''x_train,y_train=load_traindata(read=True)
 
     validation_gen=ImageDataGenerator(
         featurewise_center=0,
@@ -189,7 +229,26 @@ def validation_Generator(input_shape,batch_size):
         rescale=1./255
     )
 
-    return validation_gen.flow(x_train,y_train,batch_size=batch_size)
+    return validation_gen.flow(x_train,y_train,batch_size=batch_size)'''
+
+    x_train,y_train=load_traindata()
+
+    index=np.arange(x_train.shape[0])
+    np.random.shuffle(index)
+    x_train,y_train=x_train[index],y_train[index]
+    y_train=to_categorical(y_train,num_classes)
+    zipped=itertools.cycle(itertools.zip_longest(x_train,y_train))
+
+    while True:
+        X=[]
+        Y=[]
+        for _ in range(batch_size):
+            x_path,y=zipped.__next__()
+            img_train=img_to_array(load_img(x_path,target_size=(input_shape[0],input_shape[1]))).astype('float32')
+            X.append(normalize(img_train))
+            Y.append(y)
+
+        yield np.array(X),np.array(Y)
 
 
 def test_Generator(input_shape):
@@ -220,7 +279,8 @@ def test_Generator(input_shape):
         yield np.array(X),np.array(Y) 
 
 if __name__=='__main__':
-    (x_train,y_train),(x_test,y_test)=load_data()
-    
+    #(x_train,y_train),(x_test,y_test)=load_data()
+    test_label=np.random.randint(low=0,high=13,size=300)
+    write_result(test_label)
 
     

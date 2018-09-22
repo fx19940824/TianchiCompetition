@@ -5,10 +5,11 @@ import tensorflow as tf
 from keras.applications.inception_v3 import InceptionV3,preprocess_input
 from keras.utils.generic_utils import Progbar
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+#os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint,TensorBoard
+from keras.optimizers import Nadam,SGD
 import numpy as np
 from collections import defaultdict
 #def read_and_decode(filename_queue):
@@ -51,11 +52,11 @@ def get_image(image_path,image_W,image_H,batch_size,epochs,shuffle=False):
 
 if __name__=='__main__':
     #parameter
-    image_size=512
-    batch_size=32
-    inputshape=(512,512,3)
+    clip_size=512
+    batch_size=16
+    inputshape=(192,192,3)
     epochs=50
-    num_classes=12
+    num_classes=13
     dirpath=os.path.split(os.path.realpath(__file__))[0]
     check_path=os.path.join(dirpath,'checkpoint/')
     log_path=os.path.join(dirpath,'logs/')
@@ -63,46 +64,49 @@ if __name__=='__main__':
     #get dataset and information
     (x_train,y_train),(x_test,y_test)=datamanager.load_data()
     #image_batch=get_batch(x_train,y_train,192,256,batch_size,1)
-    y_train=keras.utils.to_categorical(y_train,num_classes)
+    #y_train=keras.utils.to_categorical(y_train,num_classes)
 
     model=modelmanager.Alexnet(input_shape=inputshape,num_classes=num_classes)
     model.compile(
         loss='categorical_crossentropy',
-        optimizer='sgd',
+        optimizer=SGD(lr=0.00001),
         metrics=['accuracy']    
     )
+    model.load_weights(filepath='D:/code/python/TianchiCompetition/Solution/checkpoint/weights-improvement-21-0.78.hdf5')
     model.summary()
 
-    train_generator=datamanager.train_Generator(inputshape,batch_size)
-    steps_per_epoch_train=len(x_train)/batch_size
+    train_generator=datamanager.train_Generator(inputshape,num_classes,batch_size)
+    steps_per_epoch_train=int(len(x_train)/batch_size)
+    check_path=check_path+"weights-improvement-{epoch:02d}-{val_acc:.2f}.hdf5"
     checkpoint=ModelCheckpoint(check_path,monitor='val_acc',verbose=0,save_best_only=False,mode='auto',save_weights_only=False)
     history=modelmanager.LossHistory()
     tensorboard=TensorBoard(log_dir=log_path,write_images=1,histogram_freq=0)
     callbacks_list=[checkpoint,history,tensorboard]
 
-    validation_generator=datamanager.validation_Generator(inputshape,batch_size)
+    validation_generator=datamanager.validation_Generator(inputshape,num_classes,batch_size)
 
     model.fit_generator(
-        train_generator,
+        generator=train_generator,
         steps_per_epoch=steps_per_epoch_train,
         epochs=epochs,
         callbacks=callbacks_list,
         verbose=1,
         validation_data=validation_generator,
-        validation_steps=500
+        validation_steps=50
     )
     history.loss_plot('epoch')
 
     result=[]
 
     for i in range(len(x_test)):
-        test_data=clip_data.clip_img(x_test[i])
+        test_data=clip_data.clip_img(x_test[i],clip_size)
         result.append(0)
         for test_batch in test_data:
-            if datamanager.isDetected(model.predict(test_batch)):
-                result[i]=1
+            pred=model.predict(test_batch)
+            if datamanager.isDetected(pred)==1:
+                result[i]=pred
                 break
-    
+    datamanager.write_result(result)
     print([result,y_test])
 
     '''train_history=defaultdict(list)

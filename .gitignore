@@ -4,6 +4,9 @@
 *.jpg
 *.xlsx
 
+#logs
+*.hdf5
+
 # Compiled Object files
 *.slo
 *.lo
