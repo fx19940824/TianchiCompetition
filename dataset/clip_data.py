@@ -5,10 +5,9 @@ import os
 import glob
 import PIL.Image as Image
 import numpy as np
-import progressbar as pb
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
-#from TianchiCompetition.dataset import datamanager
-from dataset import datamanager
+
+from TianchiCompetition.dataset import datamanager
 
 
 def clip_img(path_img):
@@ -34,11 +33,8 @@ def clip_img(path_img):
 def clip_imgs(path_positive, clip_savepath_positive):
     path_images = glob.glob(path_positive+'*.jpg')
     index_img = int(0)
-    p = pb.ProgressBar()
-    p.start(len(path_images))
     for path_img in path_images:
         index_img = index_img+1
-        p.update(index_img)
         #channel order: rgb
         img = cv2.imdecode(np.fromfile(path_img,dtype=np.uint8),-1)
         size_img = img.shape
@@ -59,9 +55,8 @@ def clip_imgs(path_positive, clip_savepath_positive):
                 if not down-up == clip_size and right - left == clip_size:
                     continue
                 clip_filename = str(index_img) + '_' + str(index) + ".jpg"
-                cv2.imencode(".jpg", clip)[1].tofile(clip_savepath_positive+clip_filename)
-    p.finish()
 
+                cv2.imencode(".jpg", clip)[1].tofile(clip_savepath_positive+clip_filename)
 
 def gen_img(path_img, folder_save):
     datagen = ImageDataGenerator(
@@ -87,6 +82,7 @@ def gen_img(path_img, folder_save):
         if i > 20:
             break  # otherwise the generator would loop indefinitely
 
+
 def clip_positive_imgs(path_positive, clip_savepath_positive):
     if not os.path.exists(path_positive):
         print('unexist input file path')
@@ -96,6 +92,7 @@ def clip_positive_imgs(path_positive, clip_savepath_positive):
         clip_imgs(path_positive, clip_savepath_positive)
         
         
+
 def clip_negative_imgs(path_negative, clip_savepath_negative):
     #negative folder list
     folderlist_negative = os.listdir(path_negative)
@@ -114,11 +111,6 @@ def clip_negative_imgs(path_negative, clip_savepath_negative):
     
 if(__name__=='__main__'):
     clip_size = 256;
-#    path_positive = 'guangdong_round1_train2_20180916/无瑕疵样本/'
-#    path_negative = 'guangdong_round1_train2_20180916/瑕疵样本/'
-#    clip_savepath_positive = 'guangdong_round1_train2_20180916_clip/positive/'
-#    clip_savepath_negative = 'guangdong_round1_train2_20180916_clip/negative/'
-    
     path_positive_ = 'guangdong_round1_train2_20180916_clip/positive/'
     path_negative_ = 'guangdong_round1_train2_20180916_clip/negative/'
     clip_savepath_positive_ = 'guangdong_round1_train2_20180916_256/positive/'
@@ -130,8 +122,7 @@ if(__name__=='__main__'):
     
     path_negative_ = 'guangdong_round1_train2_20180916/瑕疵样本/其他/'
     clip_savepath_negative_ = 'guangdong_round1_train2_20180916_256/negative/12/' #label 12 means "else"
-    clip_negative_imgs(path_negative_, clip_savepath_negative_)
     
-#    clip_positive_imgs()
-#    clip_negatiave_imgs()
+	clip_negative_imgs(path_negative_, clip_savepath_negative_)
+    
     print('finished')
